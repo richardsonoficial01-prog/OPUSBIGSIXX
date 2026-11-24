@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>OpusClip Studio AI — YouTube + Facecam IA + HD</title>
+  <title>OpusClip Studio AI — Galeria + YouTube + Facecam IA + HD</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
@@ -15,68 +15,91 @@
 <body class="min-h-screen flex flex-col">
 
   <!-- Top Bar -->
-  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between gap-2">
-    <div class="flex items-center gap-2.5 min-w-0">
+  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-3.5 py-3 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2 min-w-0">
       <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0">⚡</div>
       <div class="min-w-0">
         <div class="flex items-center gap-1.5">
-          <span class="font-extrabold text-base tracking-tight">OpusClip</span>
-          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold">PRO ∞ REAL</span>
+          <span class="font-extrabold text-sm sm:text-base tracking-tight truncate">OpusClip</span>
+          <span class="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] sm:text-[10px] font-extrabold shrink-0">PRO ∞ REAL</span>
         </div>
-        <p class="text-[10px] text-zinc-400 truncate">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>
+        <p class="text-[10px] text-zinc-400 truncate">Galeria + YouTube + Facecam IA + FFmpeg HD</p>
       </div>
     </div>
 
-    <div class="flex items-center gap-2 shrink-0">
-      <div id="google-user-badge" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-[11px] font-bold text-emerald-300">
-        <span id="google-user-name">Conta Google</span>
-        <button type="button" onclick="signOutGoogle()" class="text-zinc-400 hover:text-white ml-1">✕</button>
+    <div class="flex items-center gap-1.5 shrink-0">
+      <div id="google-user-badge" class="hidden items-center gap-1 px-2 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-[10px] font-bold text-emerald-300">
+        <span id="google-user-name" class="max-w-[80px] truncate">Google</span>
+        <button type="button" onclick="signOutGoogle()" class="text-zinc-400 hover:text-white ml-0.5">✕</button>
       </div>
-      <button type="button" id="btn-google-login" onclick="triggerGoogleSignIn()" class="px-3 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-extrabold flex items-center gap-1.5">
+      <button type="button" id="btn-google-login" onclick="triggerGoogleSignIn()" class="px-2.5 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 text-[11px] font-extrabold flex items-center gap-1">
         <span>G</span>
-        <span>Entrar com Google</span>
+        <span>Entrar</span>
       </button>
-      <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">
-        ⚙️ API / Cookies
+      <button type="button" onclick="toggleAdvancedDrawer()" class="px-2.5 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-[11px] font-bold text-zinc-200">
+        ⚙️ Config
       </button>
     </div>
   </header>
 
   <main class="flex-1 w-full max-w-4xl mx-auto px-4 pt-5 pb-24 space-y-5">
 
-    <!-- Configurações Opcionais (Google Client ID, Gemini Key & Cookies YouTube) -->
+    <!-- Configurações Opcionais (Google Client ID, Gemini Key, Cookies & Proxy) -->
     <div id="advanced-drawer" class="hidden bg-[#141417] border border-zinc-800 rounded-3xl p-4 space-y-3">
-      <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Opcionais do Servidor</h2>
+      <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Avançadas do Servidor</h2>
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-zinc-400">Google OAuth Client ID (Opcional — se não definido no servidor)</label>
+        <label class="text-xs font-semibold text-zinc-400">Proxy HTTP/SOCKS5 (Opcional — ex: http://user:pass@host:port)</label>
+        <input id="cfg-proxy-url" type="text" placeholder="http://usuario:senha@ip:porta" class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-zinc-400">Google OAuth Client ID (Opcional)</label>
         <input id="cfg-google-client-id" type="text" placeholder="1234567890-xxxx.apps.googleusercontent.com" class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
       </div>
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional — melhora títulos e curadoria)</label>
+        <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional)</label>
         <input id="cfg-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
       </div>
       <div class="space-y-1">
-        <label class="text-xs font-semibold text-zinc-400">Cookies do YouTube (Opcional — aceita cookies.txt, Base64 ou texto copiado)</label>
+        <label class="text-xs font-semibold text-zinc-400">Cookies do YouTube (Opcional — formato Netscape ou Base64)</label>
         <textarea id="cfg-cookies-raw" rows="3" placeholder="# Netscape HTTP Cookie File..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"></textarea>
       </div>
     </div>
 
-    <!-- Card Principal: Colar Link do YouTube -->
+    <!-- Card Principal: Galeria de Vídeo ou Link do YouTube -->
     <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl">
-      <div>
-        <h1 class="text-lg sm:text-xl font-extrabold">Cole o Link do YouTube para Cortar em HD</h1>
-        <p class="text-xs text-zinc-400 mt-0.5">Baixa o vídeo direto do YouTube no servidor, transcreve a voz, recorta a Facecam e entrega o MP4 pronto com áudio e sem marca d'água.</p>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h1 class="text-lg sm:text-xl font-extrabold">Envie da Galeria ou Cole um Link do YouTube</h1>
+          <p class="text-xs text-zinc-400 mt-0.5">Aceita vídeos da galeria/arquivo (MP4, MOV, MKV, WEBM) ou URL do YouTube, detecta a Facecam por IA e gera cortes 1080×1920 HD com áudio.</p>
+        </div>
+        <div class="inline-flex rounded-2xl bg-black border border-zinc-800 p-1 self-start shrink-0">
+          <button type="button" id="tab-gallery" onclick="switchSourceMode('gallery')" class="px-3 py-1.5 rounded-xl bg-white text-black text-xs font-extrabold transition">📁 Galeria</button>
+          <button type="button" id="tab-youtube" onclick="switchSourceMode('youtube')" class="px-3 py-1.5 rounded-xl text-zinc-400 hover:text-white text-xs font-bold transition">▶ YouTube</button>
+        </div>
       </div>
 
-      <div class="flex items-center bg-black border border-zinc-700 focus-within:border-white rounded-2xl px-3.5 py-2.5 gap-2">
-        <span class="px-1.5 py-0.5 rounded bg-red-600 text-[10px] font-black">▶</span>
-        <input
-          id="yt-url"
-          type="url"
-          placeholder="https://www.youtube.com/watch?v=..."
-          class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none"
-        />
-        <button type="button" onclick="pasteUrl()" class="px-3 py-1.5 rounded-xl bg-zinc-800 text-xs font-bold">Colar</button>
+      <!-- Modo Galeria / Upload de Arquivo -->
+      <div id="source-gallery-panel" class="space-y-2.5">
+        <label for="gallery-file" class="flex flex-col items-center justify-center gap-2 bg-black border-2 border-dashed border-zinc-700 hover:border-emerald-400 rounded-2xl p-5 cursor-pointer transition text-center">
+          <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-extrabold">📱 Escolher Vídeo da Galeria ou Computador</span>
+          <span id="gallery-file-label" class="text-xs font-bold text-white">Toque aqui para selecionar MP4, MOV, MKV ou WEBM</span>
+          <span id="gallery-file-meta" class="text-[11px] text-zinc-400">Sem bloqueio de bot do YouTube • Processamento direto no servidor</span>
+        </label>
+        <input id="gallery-file" type="file" accept="video/*,.mp4,.mov,.mkv,.webm,.m4v" onchange="onGalleryFileChange()" class="hidden" />
+      </div>
+
+      <!-- Modo Link do YouTube -->
+      <div id="source-youtube-panel" class="hidden space-y-2">
+        <div class="flex items-center bg-black border border-zinc-700 focus-within:border-white rounded-2xl px-3.5 py-2.5 gap-2">
+          <span class="px-1.5 py-0.5 rounded bg-red-600 text-[10px] font-black">▶</span>
+          <input
+            id="yt-url"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none"
+          />
+          <button type="button" onclick="pasteUrl()" class="px-3 py-1.5 rounded-xl bg-zinc-800 text-xs font-bold">Colar</button>
+        </div>
       </div>
 
       <!-- Opções Rápidas -->
@@ -110,12 +133,19 @@
         </div>
       </div>
 
-      <!-- Calibrador de Posição da Facecam do Streamer -->
-      <div id="facecam-box-panel" class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-2">
-        <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-emerald-400">🎥 Posição da Facecam no Vídeo Original</span>
-          <span class="text-[10px] text-zinc-400">Usado no modo Streamer Split</span>
+      <!-- Rastreio Automático de Facecam por IA + Ajuste Manual -->
+      <div id="facecam-box-panel" class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3.5 space-y-2.5">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-emerald-400">🤖 Rastreio Automático de Facecam por IA</span>
+            <p id="facecam-ai-status" class="text-[11px] text-zinc-400 mt-0.5">Modo automático ativo: analisa frames do vídeo para localizar rosto/pele e borda de câmera, com opção de ajuste manual.</p>
+          </div>
+          <label class="inline-flex items-center gap-1.5 bg-black border border-zinc-700 rounded-xl px-2.5 py-1.5 text-[11px] font-bold text-emerald-300 cursor-pointer">
+            <input id="opt-auto-facecam" type="checkbox" checked onchange="onAutoFacecamToggle()" class="accent-emerald-400" />
+            <span>Auto IA</span>
+          </label>
         </div>
+
         <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
           <button type="button" onclick="setFacecam(0.02, 0.16, 0.25, 0.36, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold">Esquerda Meio</button>
           <button type="button" onclick="setFacecam(0.02, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Esquerda</button>
@@ -144,6 +174,7 @@
       <div class="w-full h-3 bg-black rounded-full overflow-hidden">
         <div id="job-bar" class="h-full w-[5%] bg-emerald-500 transition-all duration-300"></div>
       </div>
+      <p id="job-facecam-info" class="hidden text-[11px] text-emerald-300 font-semibold"></p>
       <p id="job-error-text" class="hidden text-xs text-rose-400 font-semibold"></p>
     </div>
 
@@ -156,6 +187,8 @@
   </main>
 
   <script>
+    let sourceMode = "gallery";
+    let manualFacecamOverride = false;
     let selectedFacecam = { x: 0.02, y: 0.16, w: 0.25, h: 0.36 };
     let pollInterval = null;
     let googleAuth = {
@@ -178,6 +211,53 @@
         }
       } catch (_) {}
     })();
+
+    function switchSourceMode(mode) {
+      sourceMode = mode;
+      const gTab = document.getElementById("tab-gallery");
+      const yTab = document.getElementById("tab-youtube");
+      const gPanel = document.getElementById("source-gallery-panel");
+      const yPanel = document.getElementById("source-youtube-panel");
+
+      if (mode === "gallery") {
+        gTab.className = "px-3 py-1.5 rounded-xl bg-white text-black text-xs font-extrabold transition";
+        yTab.className = "px-3 py-1.5 rounded-xl text-zinc-400 hover:text-white text-xs font-bold transition";
+        gPanel.classList.remove("hidden");
+        yPanel.classList.add("hidden");
+      } else {
+        yTab.className = "px-3 py-1.5 rounded-xl bg-white text-black text-xs font-extrabold transition";
+        gTab.className = "px-3 py-1.5 rounded-xl text-zinc-400 hover:text-white text-xs font-bold transition";
+        yPanel.classList.remove("hidden");
+        gPanel.classList.add("hidden");
+      }
+    }
+
+    function onGalleryFileChange() {
+      const inp = document.getElementById("gallery-file");
+      const label = document.getElementById("gallery-file-label");
+      const meta = document.getElementById("gallery-file-meta");
+      if (inp.files && inp.files.length > 0) {
+        const file = inp.files[0];
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        label.textContent = `✓ ${file.name}`;
+        meta.textContent = `Arquivo pronto (${sizeMb} MB) • Será enviado direto para o servidor`;
+      } else {
+        label.textContent = "Toque aqui para selecionar MP4, MOV, MKV ou WEBM";
+        meta.textContent = "Sem bloqueio de bot do YouTube • Processamento direto no servidor";
+      }
+    }
+
+    function onAutoFacecamToggle() {
+      const autoEnabled = document.getElementById("opt-auto-facecam").checked;
+      const statusEl = document.getElementById("facecam-ai-status");
+      if (autoEnabled) {
+        manualFacecamOverride = false;
+        statusEl.textContent = "Modo automático ativo: IA rastreará a facecam no vídeo antes de renderizar (ou usará o preset se não houver rosto claro).";
+      } else {
+        manualFacecamOverride = true;
+        statusEl.textContent = "Modo manual ativo: usará exatamente a posição da facecam escolhida abaixo.";
+      }
+    }
 
     function getGoogleClientId() {
       const fromInput = document.getElementById("cfg-google-client-id").value.trim();
@@ -268,6 +348,9 @@
 
     function setFacecam(x, y, w, h, btn) {
       selectedFacecam = { x, y, w, h };
+      manualFacecamOverride = true;
+      document.getElementById("opt-auto-facecam").checked = false;
+      document.getElementById("facecam-ai-status").textContent = "Posição manual selecionada; ative 'Auto IA' para detecção automática da facecam.";
       document.querySelectorAll(".fc-btn").forEach(b => {
         b.className = "fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold";
       });
@@ -282,40 +365,77 @@
     }
 
     async function startServerJob() {
-      const url = document.getElementById("yt-url").value.trim();
-      if (!url) {
-        alert("Cole um link válido do YouTube primeiro!");
+      const fileInput = document.getElementById("gallery-file");
+      const urlInput = document.getElementById("yt-url").value.trim();
+      const hasFile = fileInput && fileInput.files && fileInput.files.length > 0;
+
+      if (sourceMode === "gallery" && !hasFile && urlInput) {
+        switchSourceMode("youtube");
+      }
+
+      const activeHasFile = sourceMode === "gallery" && hasFile;
+      if (!activeHasFile && !urlInput) {
+        alert(sourceMode === "gallery"
+          ? "Selecione um vídeo da galeria primeiro (ou mude para a aba YouTube e cole um link)."
+          : "Cole um link válido do YouTube primeiro!");
         return;
       }
 
       const btn = document.getElementById("btn-start");
       btn.disabled = true;
-      btn.textContent = "Processando no servidor...";
+      btn.textContent = activeHasFile ? "Enviando vídeo da galeria..." : "Processando no servidor...";
 
       const progCard = document.getElementById("progress-card");
       const errEl = document.getElementById("job-error-text");
+      const fcInfoEl = document.getElementById("job-facecam-info");
       progCard.classList.remove("hidden");
       errEl.classList.add("hidden");
+      fcInfoEl.classList.add("hidden");
       document.getElementById("results-section").classList.add("hidden");
 
       try {
-        const res = await fetch("/api/jobs", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            youtube_url: url,
-            clip_count: parseInt(document.getElementById("opt-count").value, 10),
-            layout_mode: document.getElementById("opt-layout").value,
-            auto_headline: true,
-            caption_style: document.getElementById("opt-caption").value,
-            language: "pt",
-            facecam_box: selectedFacecam,
-            gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,
-            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null,
-            google_access_token: googleAuth.accessToken || null,
-            google_email: googleAuth.email || null
-          })
-        });
+        let res;
+        if (activeHasFile) {
+          const fd = new FormData();
+          fd.append("file", fileInput.files[0]);
+          fd.append("clip_count", document.getElementById("opt-count").value);
+          fd.append("layout_mode", document.getElementById("opt-layout").value);
+          fd.append("auto_headline", "true");
+          fd.append("caption_style", document.getElementById("opt-caption").value);
+          fd.append("language", "pt");
+          fd.append("auto_facecam", document.getElementById("opt-auto-facecam").checked ? "true" : "false");
+          fd.append("facecam_x", String(selectedFacecam.x));
+          fd.append("facecam_y", String(selectedFacecam.y));
+          fd.append("facecam_w", String(selectedFacecam.w));
+          fd.append("facecam_h", String(selectedFacecam.h));
+          const gemKey = document.getElementById("cfg-gemini-key").value.trim();
+          if (gemKey) fd.append("gemini_api_key", gemKey);
+
+          res = await fetch("/api/jobs/upload", {
+            method: "POST",
+            body: fd
+          });
+        } else {
+          res = await fetch("/api/jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              youtube_url: urlInput,
+              clip_count: parseInt(document.getElementById("opt-count").value, 10),
+              layout_mode: document.getElementById("opt-layout").value,
+              auto_headline: true,
+              caption_style: document.getElementById("opt-caption").value,
+              language: "pt",
+              auto_facecam: document.getElementById("opt-auto-facecam").checked,
+              facecam_box: selectedFacecam,
+              gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,
+              cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null,
+              proxy_url: document.getElementById("cfg-proxy-url").value.trim() || null,
+              google_access_token: googleAuth.accessToken || null,
+              google_email: googleAuth.email || null
+            })
+          });
+        }
 
         if (!res.ok) {
           const err = await res.json();
@@ -342,6 +462,12 @@
         document.getElementById("job-step-text").textContent = job.step;
         document.getElementById("job-pct-text").textContent = `${job.progress}%`;
         document.getElementById("job-bar").style.width = `${job.progress}%`;
+
+        if (job.detected_facecam_info) {
+          const fcInfoEl = document.getElementById("job-facecam-info");
+          fcInfoEl.textContent = `🤖 Facecam IA: ${job.detected_facecam_info}`;
+          fcInfoEl.classList.remove("hidden");
+        }
 
         if (job.clips && job.clips.length > 0) {
           renderClips(job.clips);
