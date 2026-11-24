@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>OpusClip Studio AI — YouTube + Facecam IA + HD</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
   <style>
     body { background: #09090B; color: #FFFFFF; font-family: 'Inter', -apple-system, sans-serif; }
@@ -14,27 +15,42 @@
 <body class="min-h-screen flex flex-col">
 
   <!-- Top Bar -->
-  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black">⚡</div>
-      <div>
+  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between gap-2">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black shrink-0">⚡</div>
+      <div class="min-w-0">
         <div class="flex items-center gap-1.5">
           <span class="font-extrabold text-base tracking-tight">OpusClip</span>
           <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold">PRO ∞ REAL</span>
         </div>
-        <p class="text-[10px] text-zinc-400">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>
+        <p class="text-[10px] text-zinc-400 truncate">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>
       </div>
     </div>
-    <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">
-      ⚙️ API / Cookies
-    </button>
+
+    <div class="flex items-center gap-2 shrink-0">
+      <div id="google-user-badge" class="hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-[11px] font-bold text-emerald-300">
+        <span id="google-user-name">Conta Google</span>
+        <button type="button" onclick="signOutGoogle()" class="text-zinc-400 hover:text-white ml-1">✕</button>
+      </div>
+      <button type="button" id="btn-google-login" onclick="triggerGoogleSignIn()" class="px-3 py-1.5 rounded-full bg-white text-black hover:bg-zinc-200 text-xs font-extrabold flex items-center gap-1.5">
+        <span>G</span>
+        <span>Entrar com Google</span>
+      </button>
+      <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">
+        ⚙️ API / Cookies
+      </button>
+    </div>
   </header>
 
   <main class="flex-1 w-full max-w-4xl mx-auto px-4 pt-5 pb-24 space-y-5">
 
-    <!-- Configurações Opcionais (Gemini Key & Cookies YouTube) -->
+    <!-- Configurações Opcionais (Google Client ID, Gemini Key & Cookies YouTube) -->
     <div id="advanced-drawer" class="hidden bg-[#141417] border border-zinc-800 rounded-3xl p-4 space-y-3">
       <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Opcionais do Servidor</h2>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-zinc-400">Google OAuth Client ID (Opcional — se não definido no servidor)</label>
+        <input id="cfg-google-client-id" type="text" placeholder="1234567890-xxxx.apps.googleusercontent.com" class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+      </div>
       <div class="space-y-1">
         <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional — melhora títulos e curadoria)</label>
         <input id="cfg-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
@@ -142,6 +158,104 @@
   <script>
     let selectedFacecam = { x: 0.02, y: 0.16, w: 0.25, h: 0.36 };
     let pollInterval = null;
+    let googleAuth = {
+      clientId: "",
+      credential: null,
+      accessToken: null,
+      email: null,
+      name: null
+    };
+
+    (async function initGoogleConfig() {
+      try {
+        const r = await fetch("/api/auth/config");
+        if (r.ok) {
+          const data = await r.json();
+          if (data.client_id) {
+            googleAuth.clientId = data.client_id;
+            document.getElementById("cfg-google-client-id").value = data.client_id;
+          }
+        }
+      } catch (_) {}
+    })();
+
+    function getGoogleClientId() {
+      const fromInput = document.getElementById("cfg-google-client-id").value.trim();
+      return fromInput || googleAuth.clientId || "";
+    }
+
+    function setLoggedInGoogleUser(name, email) {
+      googleAuth.name = name || email || "Conta Google";
+      googleAuth.email = email || null;
+      document.getElementById("google-user-name").textContent = googleAuth.name;
+      document.getElementById("google-user-badge").classList.remove("hidden");
+      document.getElementById("google-user-badge").classList.add("flex");
+      document.getElementById("btn-google-login").classList.add("hidden");
+    }
+
+    function signOutGoogle() {
+      googleAuth.credential = null;
+      googleAuth.accessToken = null;
+      googleAuth.email = null;
+      googleAuth.name = null;
+      document.getElementById("google-user-badge").classList.add("hidden");
+      document.getElementById("google-user-badge").classList.remove("flex");
+      document.getElementById("btn-google-login").classList.remove("hidden");
+    }
+
+    function triggerGoogleSignIn() {
+      const clientId = getGoogleClientId();
+      if (!clientId) {
+        document.getElementById("advanced-drawer").classList.remove("hidden");
+        alert("Configure o Google OAuth Client ID (ou a variável GOOGLE_CLIENT_ID no Render) para ativar o login com Google.");
+        return;
+      }
+
+      if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+        alert("A biblioteca do Google ainda está carregando. Tente novamente em 2 segundos.");
+        return;
+      }
+
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: clientId,
+        scope: "openid email profile https://www.googleapis.com/auth/youtube.readonly",
+        callback: async (tokenResponse) => {
+          if (!tokenResponse || tokenResponse.error) {
+            alert("Falha ao entrar com a conta Google.");
+            return;
+          }
+          googleAuth.accessToken = tokenResponse.access_token;
+          let displayName = "Conta Google";
+          let userEmail = null;
+          try {
+            const infoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+            });
+            if (infoRes.ok) {
+              const info = await infoRes.json();
+              displayName = info.given_name || info.name || info.email || "Conta Google";
+              userEmail = info.email || null;
+            }
+          } catch (_) {}
+
+          try {
+            await fetch("/api/auth/google", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                access_token: googleAuth.accessToken,
+                email: userEmail,
+                name: displayName
+              })
+            });
+          } catch (_) {}
+
+          setLoggedInGoogleUser(displayName, userEmail);
+        }
+      });
+
+      tokenClient.requestAccessToken({ prompt: "consent" });
+    }
 
     function toggleAdvancedDrawer() {
       document.getElementById("advanced-drawer").classList.toggle("hidden");
@@ -197,7 +311,9 @@
             language: "pt",
             facecam_box: selectedFacecam,
             gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,
-            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null
+            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null,
+            google_access_token: googleAuth.accessToken || null,
+            google_email: googleAuth.email || null
           })
         });
 
