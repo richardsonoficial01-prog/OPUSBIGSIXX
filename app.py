@@ -34,7 +34,7 @@ JOBS: Dict[str, Dict[str, Any]] = {}
 WHISPER_MODEL: Optional[WhisperModel] = None
 WHISPER_LOCK = threading.Lock()
 
-EMBEDDED_HTML = '<!DOCTYPE html>\n<html lang="pt-BR" class="dark">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />\n  <title>OpusClip Studio AI — Servidor Real YouTube + Facecam IA + HD</title>\n  <script src="https://cdn.tailwindcss.com"></script>\n  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">\n  <style>\n    body { background: #09090B; color: #FFFFFF; font-family: \'Inter\', -apple-system, sans-serif; }\n    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }\n  </style>\n</head>\n<body class="min-h-screen flex flex-col">\n\n  <!-- Top Bar -->\n  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between">\n    <div class="flex items-center gap-2.5">\n      <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black">⚡</div>\n      <div>\n        <div class="flex items-center gap-1.5">\n          <span class="font-extrabold text-base tracking-tight">OpusClip</span>\n          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold">PRO ∞ REAL</span>\n        </div>\n        <p class="text-[10px] text-zinc-400">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>\n      </div>\n    </div>\n    <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">\n      ⚙️ API / Cookies\n    </button>\n  </header>\n\n  <main class="flex-1 w-full max-w-4xl mx-auto px-4 pt-5 pb-24 space-y-5">\n\n    <!-- Configurações Opcionais (Gemini Key & Cookies YouTube) -->\n    <div id="advanced-drawer" class="hidden bg-[#141417] border border-zinc-800 rounded-3xl p-4 space-y-3">\n      <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Opcionais do Servidor</h2>\n      <div class="space-y-1">\n        <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional — melhora títulos e curadoria)</label>\n        <input id="cfg-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />\n      </div>\n      <div class="space-y-1">\n        <label class="text-xs font-semibold text-zinc-400">Cookies do YouTube (Opcional — cole o conteúdo de cookies.txt ou Base64)</label>\n        <textarea id="cfg-cookies-raw" rows="2" placeholder="# Netscape HTTP Cookie File..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"></textarea>\n      </div>\n    </div>\n\n    <!-- Card Principal: Colar Link do YouTube -->\n    <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl">\n      <div>\n        <h1 class="text-lg sm:text-xl font-extrabold">Cole o Link do YouTube para Cortar em HD</h1>\n        <p class="text-xs text-zinc-400 mt-0.5">Baixa o vídeo real, transcreve a voz, recorta a Facecam e entrega o MP4 pronto com áudio e sem marca d\'água.</p>\n      </div>\n\n      <div class="flex items-center bg-black border border-zinc-700 focus-within:border-white rounded-2xl px-3.5 py-2.5 gap-2">\n        <span class="px-1.5 py-0.5 rounded bg-red-600 text-[10px] font-black">▶</span>\n        <input\n          id="yt-url"\n          type="url"\n          placeholder="https://www.youtube.com/watch?v=..."\n          class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none"\n        />\n        <button type="button" onclick="pasteUrl()" class="px-3 py-1.5 rounded-xl bg-zinc-800 text-xs font-bold">Colar</button>\n      </div>\n\n      <!-- Opções Rápidas -->\n      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Quantidade de Cortes</label>\n          <select id="opt-count" class="w-full bg-transparent text-xs font-extrabold text-emerald-400 focus:outline-none">\n            <option value="2" class="bg-zinc-900">2 cortes virais</option>\n            <option value="5" selected class="bg-zinc-900">5 cortes virais</option>\n            <option value="7" class="bg-zinc-900">7 cortes virais</option>\n            <option value="10" class="bg-zinc-900">10 cortes virais</option>\n          </select>\n        </div>\n\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Enquadramento IA</label>\n          <select id="opt-layout" onchange="toggleFacecamCalibrator()" class="w-full bg-transparent text-xs font-extrabold text-white focus:outline-none">\n            <option value="streamer_split" selected class="bg-zinc-900">Streamer Split (Facecam + Jogo)</option>\n            <option value="podcast_fill" class="bg-zinc-900">Preencher 9:16 (Podcast)</option>\n            <option value="blur_bg" class="bg-zinc-900">Fundo Desfocado 16:9</option>\n          </select>\n        </div>\n\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Legendas & Manchete</label>\n          <select id="opt-caption" class="w-full bg-transparent text-xs font-extrabold text-yellow-400 focus:outline-none">\n            <option value="opus_streamer" selected class="bg-zinc-900">Verde Neon + Amarelo + Manchete</option>\n            <option value="hormozi" class="bg-zinc-900">Branco Bold + Amarelo</option>\n            <option value="none" class="bg-zinc-900">Sem Legendas</option>\n          </select>\n        </div>\n      </div>\n\n      <!-- Calibrador de Posição da Facecam do Streamer -->\n      <div id="facecam-box-panel" class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-2">\n        <div class="flex items-center justify-between">\n          <span class="text-xs font-bold text-emerald-400">🎥 Posição da Facecam no Vídeo Original</span>\n          <span class="text-[10px] text-zinc-400">Usado no modo Streamer Split</span>\n        </div>\n        <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5">\n          <button type="button" onclick="setFacecam(0.02, 0.16, 0.25, 0.36, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold">Esquerda Meio</button>\n          <button type="button" onclick="setFacecam(0.02, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Esquerda</button>\n          <button type="button" onclick="setFacecam(0.73, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Direita</button>\n          <button type="button" onclick="setFacecam(0.02, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Esquerda</button>\n          <button type="button" onclick="setFacecam(0.73, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Direita</button>\n        </div>\n      </div>\n\n      <button\n        type="button"\n        id="btn-start"\n        onclick="startServerJob()"\n        class="w-full py-4 rounded-full bg-white hover:bg-zinc-200 active:scale-[0.99] text-black font-extrabold text-sm transition shadow-xl"\n      >\n        Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)\n      </button>\n    </div>\n\n    <!-- Barra de Progresso Real do Servidor -->\n    <div id="progress-card" class="hidden bg-[#141417] border border-emerald-500/40 rounded-3xl p-5 space-y-3">\n      <div class="flex items-center justify-between">\n        <span id="job-step-text" class="text-xs sm:text-sm font-bold text-white">Conectando ao servidor...</span>\n        <span id="job-pct-text" class="text-sm font-mono font-extrabold text-emerald-400">5%</span>\n      </div>\n      <div class="w-full h-3 bg-black rounded-full overflow-hidden">\n        <div id="job-bar" class="h-full w-[5%] bg-emerald-500 transition-all duration-300"></div>\n      </div>\n      <p id="job-error-text" class="hidden text-xs text-rose-400 font-semibold"></p>\n    </div>\n\n    <!-- Resultados Reais Prontos para Assistir e Baixar -->\n    <div id="results-section" class="hidden space-y-3">\n      <h2 class="text-base font-extrabold text-white">✓ Cortes Reais Prontos (1080×1920 HD + Áudio Original)</h2>\n      <div id="clips-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>\n    </div>\n\n  </main>\n\n  <script>\n    let selectedFacecam = { x: 0.02, y: 0.16, w: 0.25, h: 0.36 };\n    let pollInterval = null;\n\n    function toggleAdvancedDrawer() {\n      document.getElementById("advanced-drawer").classList.toggle("hidden");\n    }\n\n    function toggleFacecamCalibrator() {\n      const mode = document.getElementById("opt-layout").value;\n      document.getElementById("facecam-box-panel").classList.toggle("hidden", mode !== "streamer_split");\n    }\n\n    function setFacecam(x, y, w, h, btn) {\n      selectedFacecam = { x, y, w, h };\n      document.querySelectorAll(".fc-btn").forEach(b => {\n        b.className = "fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold";\n      });\n      btn.className = "fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold";\n    }\n\n    async function pasteUrl() {\n      try {\n        const txt = await navigator.clipboard.readText();\n        if (txt) document.getElementById("yt-url").value = txt.trim();\n      } catch (_) {}\n    }\n\n    async function startServerJob() {\n      const url = document.getElementById("yt-url").value.trim();\n      if (!url) {\n        alert("Cole um link válido do YouTube primeiro!");\n        return;\n      }\n\n      const btn = document.getElementById("btn-start");\n      btn.disabled = true;\n      btn.textContent = "Processando no servidor...";\n\n      const progCard = document.getElementById("progress-card");\n      const errEl = document.getElementById("job-error-text");\n      progCard.classList.remove("hidden");\n      errEl.classList.add("hidden");\n      document.getElementById("results-section").classList.add("hidden");\n\n      try {\n        const res = await fetch("/api/jobs", {\n          method: "POST",\n          headers: { "Content-Type": "application/json" },\n          body: JSON.stringify({\n            youtube_url: url,\n            clip_count: parseInt(document.getElementById("opt-count").value, 10),\n            layout_mode: document.getElementById("opt-layout").value,\n            auto_headline: true,\n            caption_style: document.getElementById("opt-caption").value,\n            language: "pt",\n            facecam_box: selectedFacecam,\n            gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,\n            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null\n          })\n        });\n\n        if (!res.ok) {\n          const err = await res.json();\n          throw new Error(err.detail || "Erro ao iniciar processamento.");\n        }\n\n        const { job_id } = await res.json();\n        clearInterval(pollInterval);\n        pollInterval = setInterval(() => pollJobStatus(job_id), 2500);\n      } catch (e) {\n        errEl.textContent = e.message;\n        errEl.classList.remove("hidden");\n        btn.disabled = false;\n        btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)";\n      }\n    }\n\n    async function pollJobStatus(jobId) {\n      try {\n        const res = await fetch(`/api/jobs/${jobId}`);\n        if (!res.ok) return;\n        const job = await res.json();\n\n        document.getElementById("job-step-text").textContent = job.step;\n        document.getElementById("job-pct-text").textContent = `${job.progress}%`;\n        document.getElementById("job-bar").style.width = `${job.progress}%`;\n\n        if (job.clips && job.clips.length > 0) {\n          renderClips(job.clips);\n        }\n\n        if (job.status === "completed") {\n          clearInterval(pollInterval);\n          const btn = document.getElementById("btn-start");\n          btn.disabled = false;\n          btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)";\n        } else if (job.status === "error") {\n          clearInterval(pollInterval);\n          const errEl = document.getElementById("job-error-text");\n          errEl.textContent = job.error || "Erro desconhecido no servidor.";\n          errEl.classList.remove("hidden");\n          const btn = document.getElementById("btn-start");\n          btn.disabled = false;\n          btn.textContent = "Tentar Novamente";\n        }\n      } catch (_) {}\n    }\n\n    function renderClips(clips) {\n      document.getElementById("results-section").classList.remove("hidden");\n      const grid = document.getElementById("clips-grid");\n      grid.innerHTML = clips.map(c => `\n        <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-3.5 space-y-3">\n          <div class="aspect-[9/16] w-full rounded-2xl overflow-hidden bg-black border border-zinc-800">\n            <video src="${c.download_url}" controls playsinline preload="metadata" class="w-full h-full object-contain"></video>\n          </div>\n          <div class="flex items-start justify-between gap-2">\n            <div>\n              <div class="text-xs font-extrabold text-white">${c.title}</div>\n              <div class="text-[11px] text-zinc-400 mt-0.5">${c.duration}s • Score Viral: <span class="text-emerald-400 font-bold">${c.score}/100</span></div>\n            </div>\n          </div>\n          <a\n            href="${c.download_url}"\n            download="${c.filename}"\n            class="w-full py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg"\n          >\n            <span>⬇ Baixar MP4 HD (Sem Marca d\'Água)</span>\n          </a>\n        </div>\n      `).join("");\n    }\n  </script>\n</body>\n</html>\n'
+EMBEDDED_HTML = '<!DOCTYPE html>\n<html lang="pt-BR" class="dark">\n<head>\n  <meta charset="UTF-8" />\n  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />\n  <title>OpusClip Studio AI — YouTube + Facecam IA + HD</title>\n  <script src="https://cdn.tailwindcss.com"></script>\n  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">\n  <style>\n    body { background: #09090B; color: #FFFFFF; font-family: \'Inter\', -apple-system, sans-serif; }\n    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }\n  </style>\n</head>\n<body class="min-h-screen flex flex-col">\n\n  <!-- Top Bar -->\n  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between">\n    <div class="flex items-center gap-2.5">\n      <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black">⚡</div>\n      <div>\n        <div class="flex items-center gap-1.5">\n          <span class="font-extrabold text-base tracking-tight">OpusClip</span>\n          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold">PRO ∞ REAL</span>\n        </div>\n        <p class="text-[10px] text-zinc-400">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>\n      </div>\n    </div>\n    <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">\n      ⚙️ API / Cookies\n    </button>\n  </header>\n\n  <main class="flex-1 w-full max-w-4xl mx-auto px-4 pt-5 pb-24 space-y-5">\n\n    <!-- Configurações Opcionais (Gemini Key & Cookies YouTube) -->\n    <div id="advanced-drawer" class="hidden bg-[#141417] border border-zinc-800 rounded-3xl p-4 space-y-3">\n      <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Opcionais do Servidor</h2>\n      <div class="space-y-1">\n        <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional — melhora títulos e curadoria)</label>\n        <input id="cfg-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />\n      </div>\n      <div class="space-y-1">\n        <label class="text-xs font-semibold text-zinc-400">Cookies do YouTube (Opcional — aceita cookies.txt, Base64 ou texto copiado)</label>\n        <textarea id="cfg-cookies-raw" rows="3" placeholder="# Netscape HTTP Cookie File..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"></textarea>\n      </div>\n    </div>\n\n    <!-- Card Principal: Colar Link do YouTube -->\n    <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl">\n      <div>\n        <h1 class="text-lg sm:text-xl font-extrabold">Cole o Link do YouTube para Cortar em HD</h1>\n        <p class="text-xs text-zinc-400 mt-0.5">Baixa o vídeo direto do YouTube no servidor, transcreve a voz, recorta a Facecam e entrega o MP4 pronto com áudio e sem marca d\'água.</p>\n      </div>\n\n      <div class="flex items-center bg-black border border-zinc-700 focus-within:border-white rounded-2xl px-3.5 py-2.5 gap-2">\n        <span class="px-1.5 py-0.5 rounded bg-red-600 text-[10px] font-black">▶</span>\n        <input\n          id="yt-url"\n          type="url"\n          placeholder="https://www.youtube.com/watch?v=..."\n          class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none"\n        />\n        <button type="button" onclick="pasteUrl()" class="px-3 py-1.5 rounded-xl bg-zinc-800 text-xs font-bold">Colar</button>\n      </div>\n\n      <!-- Opções Rápidas -->\n      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Quantidade de Cortes</label>\n          <select id="opt-count" class="w-full bg-transparent text-xs font-extrabold text-emerald-400 focus:outline-none">\n            <option value="2" class="bg-zinc-900">2 cortes virais</option>\n            <option value="5" selected class="bg-zinc-900">5 cortes virais</option>\n            <option value="7" class="bg-zinc-900">7 cortes virais</option>\n            <option value="10" class="bg-zinc-900">10 cortes virais</option>\n          </select>\n        </div>\n\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Enquadramento IA</label>\n          <select id="opt-layout" onchange="toggleFacecamCalibrator()" class="w-full bg-transparent text-xs font-extrabold text-white focus:outline-none">\n            <option value="streamer_split" selected class="bg-zinc-900">Streamer Split (Facecam + Jogo)</option>\n            <option value="podcast_fill" class="bg-zinc-900">Preencher 9:16 (Podcast)</option>\n            <option value="blur_bg" class="bg-zinc-900">Fundo Desfocado 16:9</option>\n          </select>\n        </div>\n\n        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">\n          <label class="text-[10px] font-bold uppercase text-zinc-400">Legendas & Manchete</label>\n          <select id="opt-caption" class="w-full bg-transparent text-xs font-extrabold text-yellow-400 focus:outline-none">\n            <option value="opus_streamer" selected class="bg-zinc-900">Verde Neon + Amarelo + Manchete</option>\n            <option value="hormozi" class="bg-zinc-900">Branco Bold + Amarelo</option>\n            <option value="none" class="bg-zinc-900">Sem Legendas</option>\n          </select>\n        </div>\n      </div>\n\n      <!-- Calibrador de Posição da Facecam do Streamer -->\n      <div id="facecam-box-panel" class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-2">\n        <div class="flex items-center justify-between">\n          <span class="text-xs font-bold text-emerald-400">🎥 Posição da Facecam no Vídeo Original</span>\n          <span class="text-[10px] text-zinc-400">Usado no modo Streamer Split</span>\n        </div>\n        <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5">\n          <button type="button" onclick="setFacecam(0.02, 0.16, 0.25, 0.36, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold">Esquerda Meio</button>\n          <button type="button" onclick="setFacecam(0.02, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Esquerda</button>\n          <button type="button" onclick="setFacecam(0.73, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Direita</button>\n          <button type="button" onclick="setFacecam(0.02, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Esquerda</button>\n          <button type="button" onclick="setFacecam(0.73, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Direita</button>\n        </div>\n      </div>\n\n      <button\n        type="button"\n        id="btn-start"\n        onclick="startServerJob()"\n        class="w-full py-4 rounded-full bg-white hover:bg-zinc-200 active:scale-[0.99] text-black font-extrabold text-sm transition shadow-xl"\n      >\n        Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)\n      </button>\n    </div>\n\n    <!-- Barra de Progresso Real do Servidor -->\n    <div id="progress-card" class="hidden bg-[#141417] border border-emerald-500/40 rounded-3xl p-5 space-y-3">\n      <div class="flex items-center justify-between">\n        <span id="job-step-text" class="text-xs sm:text-sm font-bold text-white">Conectando ao servidor...</span>\n        <span id="job-pct-text" class="text-sm font-mono font-extrabold text-emerald-400">5%</span>\n      </div>\n      <div class="w-full h-3 bg-black rounded-full overflow-hidden">\n        <div id="job-bar" class="h-full w-[5%] bg-emerald-500 transition-all duration-300"></div>\n      </div>\n      <p id="job-error-text" class="hidden text-xs text-rose-400 font-semibold"></p>\n    </div>\n\n    <!-- Resultados Reais Prontos para Assistir e Baixar -->\n    <div id="results-section" class="hidden space-y-3">\n      <h2 class="text-base font-extrabold text-white">✓ Cortes Reais Prontos (1080×1920 HD + Áudio Original)</h2>\n      <div id="clips-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>\n    </div>\n\n  </main>\n\n  <script>\n    let selectedFacecam = { x: 0.02, y: 0.16, w: 0.25, h: 0.36 };\n    let pollInterval = null;\n\n    function toggleAdvancedDrawer() {\n      document.getElementById("advanced-drawer").classList.toggle("hidden");\n    }\n\n    function toggleFacecamCalibrator() {\n      const mode = document.getElementById("opt-layout").value;\n      document.getElementById("facecam-box-panel").classList.toggle("hidden", mode !== "streamer_split");\n    }\n\n    function setFacecam(x, y, w, h, btn) {\n      selectedFacecam = { x, y, w, h };\n      document.querySelectorAll(".fc-btn").forEach(b => {\n        b.className = "fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold";\n      });\n      btn.className = "fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold";\n    }\n\n    async function pasteUrl() {\n      try {\n        const txt = await navigator.clipboard.readText();\n        if (txt) document.getElementById("yt-url").value = txt.trim();\n      } catch (_) {}\n    }\n\n    async function startServerJob() {\n      const url = document.getElementById("yt-url").value.trim();\n      if (!url) {\n        alert("Cole um link válido do YouTube primeiro!");\n        return;\n      }\n\n      const btn = document.getElementById("btn-start");\n      btn.disabled = true;\n      btn.textContent = "Processando no servidor...";\n\n      const progCard = document.getElementById("progress-card");\n      const errEl = document.getElementById("job-error-text");\n      progCard.classList.remove("hidden");\n      errEl.classList.add("hidden");\n      document.getElementById("results-section").classList.add("hidden");\n\n      try {\n        const res = await fetch("/api/jobs", {\n          method: "POST",\n          headers: { "Content-Type": "application/json" },\n          body: JSON.stringify({\n            youtube_url: url,\n            clip_count: parseInt(document.getElementById("opt-count").value, 10),\n            layout_mode: document.getElementById("opt-layout").value,\n            auto_headline: true,\n            caption_style: document.getElementById("opt-caption").value,\n            language: "pt",\n            facecam_box: selectedFacecam,\n            gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,\n            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null\n          })\n        });\n\n        if (!res.ok) {\n          const err = await res.json();\n          throw new Error(err.detail || "Erro ao iniciar processamento.");\n        }\n\n        const { job_id } = await res.json();\n        clearInterval(pollInterval);\n        pollInterval = setInterval(() => pollJobStatus(job_id), 2500);\n      } catch (e) {\n        errEl.textContent = e.message;\n        errEl.classList.remove("hidden");\n        btn.disabled = false;\n        btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)";\n      }\n    }\n\n    async function pollJobStatus(jobId) {\n      try {\n        const res = await fetch(`/api/jobs/${jobId}`);\n        if (!res.ok) return;\n        const job = await res.json();\n\n        document.getElementById("job-step-text").textContent = job.step;\n        document.getElementById("job-pct-text").textContent = `${job.progress}%`;\n        document.getElementById("job-bar").style.width = `${job.progress}%`;\n\n        if (job.clips && job.clips.length > 0) {\n          renderClips(job.clips);\n        }\n\n        if (job.status === "completed") {\n          clearInterval(pollInterval);\n          const btn = document.getElementById("btn-start");\n          btn.disabled = false;\n          btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d\'Água)";\n        } else if (job.status === "error") {\n          clearInterval(pollInterval);\n          const errEl = document.getElementById("job-error-text");\n          errEl.textContent = job.error || "Erro desconhecido no servidor.";\n          errEl.classList.remove("hidden");\n          const btn = document.getElementById("btn-start");\n          btn.disabled = false;\n          btn.textContent = "Tentar Novamente";\n        }\n      } catch (_) {}\n    }\n\n    function renderClips(clips) {\n      document.getElementById("results-section").classList.remove("hidden");\n      const grid = document.getElementById("clips-grid");\n      grid.innerHTML = clips.map(c => `\n        <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-3.5 space-y-3">\n          <div class="aspect-[9/16] w-full rounded-2xl overflow-hidden bg-black border border-zinc-800">\n            <video src="${c.download_url}" controls playsinline preload="metadata" class="w-full h-full object-contain"></video>\n          </div>\n          <div class="flex items-start justify-between gap-2">\n            <div>\n              <div class="text-xs font-extrabold text-white">${c.title}</div>\n              <div class="text-[11px] text-zinc-400 mt-0.5">${c.duration}s • Score Viral: <span class="text-emerald-400 font-bold">${c.score}/100</span></div>\n            </div>\n          </div>\n          <a\n            href="${c.download_url}"\n            download="${c.filename}"\n            class="w-full py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg"\n          >\n            <span>⬇ Baixar MP4 HD (Sem Marca d\'Água)</span>\n          </a>\n        </div>\n      `).join("");\n    }\n  </script>\n</body>\n</html>\n'
 
 
 def get_whisper_model() -> WhisperModel:
@@ -45,26 +45,66 @@ def get_whisper_model() -> WhisperModel:
         return WHISPER_MODEL
 
 
+def normalize_netscape_cookies(raw_text: str) -> Optional[str]:
+    text = (raw_text or "").strip().strip('"').strip("'")
+    if not text:
+        return None
+
+    # Decodifica caso venha em Base64
+    if "youtube.com" not in text and "# Netscape" not in text:
+        try:
+            text = base64.b64decode(text).decode("utf-8", errors="ignore").strip()
+        except Exception:
+            return None
+
+    if "youtube.com" not in text:
+        return None
+
+    # Converte sequencias literais \t e \n em tabulacoes e quebras de linha reais
+    text = text.replace("\\r\\n", "\n").replace("\\n", "\n").replace("\\t", "\t")
+
+    lines = []
+    has_header = False
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line:
+            continue
+        if line.startswith("# Netscape HTTP Cookie File") or line.startswith("# HTTP Cookie File"):
+            has_header = True
+            lines.append("# Netscape HTTP Cookie File")
+            continue
+        if line.startswith("#"):
+            lines.append(line)
+            continue
+        # Se a linha estiver separada por espacos multiplos em vez de TAB, converte para TAB
+        if "\t" not in line:
+            parts = re.split(r"\s{2,}", line)
+            if len(parts) >= 7:
+                line = "\t".join(parts[:7])
+        if "\t" in line:
+            parts = line.split("\t")
+            if len(parts) >= 7:
+                lines.append("\t".join(parts[:7]))
+
+    if len(lines) == 0:
+        return None
+    if not has_header:
+        lines.insert(0, "# Netscape HTTP Cookie File")
+    return "\n".join(lines) + "\n"
+
+
 def write_cookies_if_present(job_dir: Path, cookies_raw: Optional[str] = None) -> Optional[Path]:
     raw = (
         cookies_raw
         or os.environ.get("YOUTUBE_COOKIES", "")
         or os.environ.get("YT_COOKIES_B64", "")
     ).strip()
-    if not raw:
+    normalized = normalize_netscape_cookies(raw)
+    if not normalized:
         return None
-    try:
-        if "youtube.com" in raw or "# Netscape" in raw:
-            decoded = raw
-        else:
-            decoded = base64.b64decode(raw).decode("utf-8", errors="ignore")
-        if "youtube.com" in decoded or "# Netscape" in decoded:
-            cookie_path = job_dir / "cookies.txt"
-            cookie_path.write_text(decoded, encoding="utf-8")
-            return cookie_path
-    except Exception:
-        pass
-    return None
+    cookie_path = job_dir / "cookies.txt"
+    cookie_path.write_text(normalized, encoding="utf-8")
+    return cookie_path
 
 
 def extract_youtube_id(url: str) -> Optional[str]:
@@ -99,7 +139,6 @@ class CreateJobRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 def serve_frontend():
-    # Procura index.html na mesma pasta ou em static/, e se nao existir usa EMBEDDED_HTML
     for candidate in [
         Path(__file__).parent / "index.html",
         Path(__file__).parent / "static" / "index.html",
@@ -124,7 +163,6 @@ def create_clip_job(req: CreateJobRequest):
     if not vid_id:
         raise HTTPException(status_code=400, detail="Link do YouTube inválido.")
 
-    # Limpa jobs antigos para nao lotar o disco do Render Free
     existing = sorted(JOBS_ROOT.iterdir(), key=lambda p: p.stat().st_mtime)
     while len(existing) > 4:
         shutil.rmtree(existing.pop(0), ignore_errors=True)
@@ -341,6 +379,44 @@ def select_viral_segments(
     return out
 
 
+def download_youtube_video(canonical_url: str, source_mp4: Path, cookie_file: Optional[Path]):
+    client_profiles = [
+        "youtube:player_client=ios,tv_embedded,android",
+        "youtube:player_client=android,web",
+        "youtube:player_client=mweb,web",
+    ]
+    last_err = "Falha ao baixar vídeo do YouTube."
+
+    for idx, extractor_arg in enumerate(client_profiles):
+        if source_mp4.exists():
+            source_mp4.unlink()
+        dl_cmd = [
+            "yt-dlp",
+            "-f",
+            "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best",
+            "--merge-output-format",
+            "mp4",
+            "--no-playlist",
+            "--extractor-args",
+            extractor_arg,
+            "-o",
+            str(source_mp4),
+            canonical_url,
+        ]
+        # Usa cookies se fornecidos; se falhar na primeira tentativa, tenta sem cookies na ultima
+        if cookie_file and (idx < len(client_profiles) - 1):
+            dl_cmd.extend(["--cookies", str(cookie_file)])
+
+        dl_proc = subprocess.run(dl_cmd, capture_output=True, text=True, timeout=300)
+        if dl_proc.returncode == 0 and source_mp4.exists():
+            return
+        err_lines = [l for l in (dl_proc.stderr or "").splitlines() if l.strip()]
+        if err_lines:
+            last_err = err_lines[-1]
+
+    raise RuntimeError(f"YouTube bloqueou ou falhou no download: {last_err}")
+
+
 def run_pipeline_worker(job_id: str, req: CreateJobRequest):
     job = JOBS[job_id]
     job_dir = JOBS_ROOT / job_id
@@ -352,28 +428,7 @@ def run_pipeline_worker(job_id: str, req: CreateJobRequest):
         job["progress"] = 12
         job["step"] = "Baixando vídeo e áudio original do YouTube (yt-dlp)..."
         source_mp4 = job_dir / "source.mp4"
-
-        dl_cmd = [
-            "yt-dlp",
-            "-f",
-            "bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best",
-            "--merge-output-format",
-            "mp4",
-            "--no-playlist",
-            "--extractor-args",
-            "youtube:player_client=android,web",
-            "-o",
-            str(source_mp4),
-            canonical_url,
-        ]
-        if cookie_file:
-            dl_cmd.extend(["--cookies", str(cookie_file)])
-
-        dl_proc = subprocess.run(dl_cmd, capture_output=True, text=True, timeout=300)
-        if dl_proc.returncode != 0 or not source_mp4.exists():
-            err_lines = [l for l in (dl_proc.stderr or "").splitlines() if l.strip()]
-            err_msg = err_lines[-1] if err_lines else "Falha ao baixar vídeo do YouTube."
-            raise RuntimeError(f"YouTube bloqueou ou falhou no download: {err_msg}")
+        download_youtube_video(canonical_url, source_mp4, cookie_file)
 
         probe_cmd = [
             "ffprobe",
