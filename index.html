@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>OpusClip Studio AI — Servidor Real YouTube + Facecam IA + HD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+  <style>
+    body { background: #09090B; color: #FFFFFF; font-family: 'Inter', -apple-system, sans-serif; }
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <!-- Top Bar -->
+  <header class="sticky top-0 z-30 bg-[#09090B]/95 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-white text-black flex items-center justify-center font-black">⚡</div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <span class="font-extrabold text-base tracking-tight">OpusClip</span>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold">PRO ∞ REAL</span>
+        </div>
+        <p class="text-[10px] text-zinc-400">yt-dlp + Whisper IA + FFmpeg HD 1080×1920</p>
+      </div>
+    </div>
+    <button type="button" onclick="toggleAdvancedDrawer()" class="px-3 py-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-xs font-bold text-zinc-200">
+      ⚙️ API / Cookies
+    </button>
+  </header>
+
+  <main class="flex-1 w-full max-w-4xl mx-auto px-4 pt-5 pb-24 space-y-5">
+
+    <!-- Configurações Opcionais (Gemini Key & Cookies YouTube) -->
+    <div id="advanced-drawer" class="hidden bg-[#141417] border border-zinc-800 rounded-3xl p-4 space-y-3">
+      <h2 class="text-xs font-extrabold uppercase tracking-wider text-emerald-400">Configurações Opcionais do Servidor</h2>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-zinc-400">Chave Gemini API (Opcional — melhora títulos e curadoria)</label>
+        <input id="cfg-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white" />
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-zinc-400">Cookies do YouTube (Opcional — cole o conteúdo de cookies.txt ou Base64)</label>
+        <textarea id="cfg-cookies-raw" rows="2" placeholder="# Netscape HTTP Cookie File..." class="w-full bg-black border border-zinc-800 rounded-xl px-3 py-2 text-xs text-white"></textarea>
+      </div>
+    </div>
+
+    <!-- Card Principal: Colar Link do YouTube -->
+    <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl">
+      <div>
+        <h1 class="text-lg sm:text-xl font-extrabold">Cole o Link do YouTube para Cortar em HD</h1>
+        <p class="text-xs text-zinc-400 mt-0.5">Baixa o vídeo real, transcreve a voz, recorta a Facecam e entrega o MP4 pronto com áudio e sem marca d'água.</p>
+      </div>
+
+      <div class="flex items-center bg-black border border-zinc-700 focus-within:border-white rounded-2xl px-3.5 py-2.5 gap-2">
+        <span class="px-1.5 py-0.5 rounded bg-red-600 text-[10px] font-black">▶</span>
+        <input
+          id="yt-url"
+          type="url"
+          placeholder="https://www.youtube.com/watch?v=..."
+          class="flex-1 min-w-0 bg-transparent text-xs sm:text-sm text-white placeholder-zinc-500 focus:outline-none"
+        />
+        <button type="button" onclick="pasteUrl()" class="px-3 py-1.5 rounded-xl bg-zinc-800 text-xs font-bold">Colar</button>
+      </div>
+
+      <!-- Opções Rápidas -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">
+          <label class="text-[10px] font-bold uppercase text-zinc-400">Quantidade de Cortes</label>
+          <select id="opt-count" class="w-full bg-transparent text-xs font-extrabold text-emerald-400 focus:outline-none">
+            <option value="2" class="bg-zinc-900">2 cortes virais</option>
+            <option value="5" selected class="bg-zinc-900">5 cortes virais</option>
+            <option value="7" class="bg-zinc-900">7 cortes virais</option>
+            <option value="10" class="bg-zinc-900">10 cortes virais</option>
+          </select>
+        </div>
+
+        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">
+          <label class="text-[10px] font-bold uppercase text-zinc-400">Enquadramento IA</label>
+          <select id="opt-layout" onchange="toggleFacecamCalibrator()" class="w-full bg-transparent text-xs font-extrabold text-white focus:outline-none">
+            <option value="streamer_split" selected class="bg-zinc-900">Streamer Split (Facecam + Jogo)</option>
+            <option value="podcast_fill" class="bg-zinc-900">Preencher 9:16 (Podcast)</option>
+            <option value="blur_bg" class="bg-zinc-900">Fundo Desfocado 16:9</option>
+          </select>
+        </div>
+
+        <div class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-1">
+          <label class="text-[10px] font-bold uppercase text-zinc-400">Legendas & Manchete</label>
+          <select id="opt-caption" class="w-full bg-transparent text-xs font-extrabold text-yellow-400 focus:outline-none">
+            <option value="opus_streamer" selected class="bg-zinc-900">Verde Neon + Amarelo + Manchete</option>
+            <option value="hormozi" class="bg-zinc-900">Branco Bold + Amarelo</option>
+            <option value="none" class="bg-zinc-900">Sem Legendas</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Calibrador de Posição da Facecam do Streamer -->
+      <div id="facecam-box-panel" class="bg-[#1C1C1F] border border-zinc-800 rounded-2xl p-3 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-400">🎥 Posição da Facecam no Vídeo Original</span>
+          <span class="text-[10px] text-zinc-400">Usado no modo Streamer Split</span>
+        </div>
+        <div class="grid grid-cols-3 sm:grid-cols-5 gap-1.5">
+          <button type="button" onclick="setFacecam(0.02, 0.16, 0.25, 0.36, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold">Esquerda Meio</button>
+          <button type="button" onclick="setFacecam(0.02, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Esquerda</button>
+          <button type="button" onclick="setFacecam(0.73, 0.03, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Topo Direita</button>
+          <button type="button" onclick="setFacecam(0.02, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Esquerda</button>
+          <button type="button" onclick="setFacecam(0.73, 0.62, 0.25, 0.34, this)" class="fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold">Base Direita</button>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        id="btn-start"
+        onclick="startServerJob()"
+        class="w-full py-4 rounded-full bg-white hover:bg-zinc-200 active:scale-[0.99] text-black font-extrabold text-sm transition shadow-xl"
+      >
+        Obter Clipes Reais em 1 Clique (HD Sem Marca d'Água)
+      </button>
+    </div>
+
+    <!-- Barra de Progresso Real do Servidor -->
+    <div id="progress-card" class="hidden bg-[#141417] border border-emerald-500/40 rounded-3xl p-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <span id="job-step-text" class="text-xs sm:text-sm font-bold text-white">Conectando ao servidor...</span>
+        <span id="job-pct-text" class="text-sm font-mono font-extrabold text-emerald-400">5%</span>
+      </div>
+      <div class="w-full h-3 bg-black rounded-full overflow-hidden">
+        <div id="job-bar" class="h-full w-[5%] bg-emerald-500 transition-all duration-300"></div>
+      </div>
+      <p id="job-error-text" class="hidden text-xs text-rose-400 font-semibold"></p>
+    </div>
+
+    <!-- Resultados Reais Prontos para Assistir e Baixar -->
+    <div id="results-section" class="hidden space-y-3">
+      <h2 class="text-base font-extrabold text-white">✓ Cortes Reais Prontos (1080×1920 HD + Áudio Original)</h2>
+      <div id="clips-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    </div>
+
+  </main>
+
+  <script>
+    let selectedFacecam = { x: 0.02, y: 0.16, w: 0.25, h: 0.36 };
+    let pollInterval = null;
+
+    function toggleAdvancedDrawer() {
+      document.getElementById("advanced-drawer").classList.toggle("hidden");
+    }
+
+    function toggleFacecamCalibrator() {
+      const mode = document.getElementById("opt-layout").value;
+      document.getElementById("facecam-box-panel").classList.toggle("hidden", mode !== "streamer_split");
+    }
+
+    function setFacecam(x, y, w, h, btn) {
+      selectedFacecam = { x, y, w, h };
+      document.querySelectorAll(".fc-btn").forEach(b => {
+        b.className = "fc-btn py-1.5 px-2 rounded-xl bg-zinc-800 text-zinc-300 text-[11px] font-bold";
+      });
+      btn.className = "fc-btn py-1.5 px-2 rounded-xl bg-white text-black text-[11px] font-extrabold";
+    }
+
+    async function pasteUrl() {
+      try {
+        const txt = await navigator.clipboard.readText();
+        if (txt) document.getElementById("yt-url").value = txt.trim();
+      } catch (_) {}
+    }
+
+    async function startServerJob() {
+      const url = document.getElementById("yt-url").value.trim();
+      if (!url) {
+        alert("Cole um link válido do YouTube primeiro!");
+        return;
+      }
+
+      const btn = document.getElementById("btn-start");
+      btn.disabled = true;
+      btn.textContent = "Processando no servidor...";
+
+      const progCard = document.getElementById("progress-card");
+      const errEl = document.getElementById("job-error-text");
+      progCard.classList.remove("hidden");
+      errEl.classList.add("hidden");
+      document.getElementById("results-section").classList.add("hidden");
+
+      try {
+        const res = await fetch("/api/jobs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            youtube_url: url,
+            clip_count: parseInt(document.getElementById("opt-count").value, 10),
+            layout_mode: document.getElementById("opt-layout").value,
+            auto_headline: true,
+            caption_style: document.getElementById("opt-caption").value,
+            language: "pt",
+            facecam_box: selectedFacecam,
+            gemini_api_key: document.getElementById("cfg-gemini-key").value.trim() || null,
+            cookies_raw: document.getElementById("cfg-cookies-raw").value.trim() || null
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Erro ao iniciar processamento.");
+        }
+
+        const { job_id } = await res.json();
+        clearInterval(pollInterval);
+        pollInterval = setInterval(() => pollJobStatus(job_id), 2500);
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.classList.remove("hidden");
+        btn.disabled = false;
+        btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d'Água)";
+      }
+    }
+
+    async function pollJobStatus(jobId) {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`);
+        if (!res.ok) return;
+        const job = await res.json();
+
+        document.getElementById("job-step-text").textContent = job.step;
+        document.getElementById("job-pct-text").textContent = `${job.progress}%`;
+        document.getElementById("job-bar").style.width = `${job.progress}%`;
+
+        if (job.clips && job.clips.length > 0) {
+          renderClips(job.clips);
+        }
+
+        if (job.status === "completed") {
+          clearInterval(pollInterval);
+          const btn = document.getElementById("btn-start");
+          btn.disabled = false;
+          btn.textContent = "Obter Clipes Reais em 1 Clique (HD Sem Marca d'Água)";
+        } else if (job.status === "error") {
+          clearInterval(pollInterval);
+          const errEl = document.getElementById("job-error-text");
+          errEl.textContent = job.error || "Erro desconhecido no servidor.";
+          errEl.classList.remove("hidden");
+          const btn = document.getElementById("btn-start");
+          btn.disabled = false;
+          btn.textContent = "Tentar Novamente";
+        }
+      } catch (_) {}
+    }
+
+    function renderClips(clips) {
+      document.getElementById("results-section").classList.remove("hidden");
+      const grid = document.getElementById("clips-grid");
+      grid.innerHTML = clips.map(c => `
+        <div class="bg-[#141417] border border-zinc-800 rounded-3xl p-3.5 space-y-3">
+          <div class="aspect-[9/16] w-full rounded-2xl overflow-hidden bg-black border border-zinc-800">
+            <video src="${c.download_url}" controls playsinline preload="metadata" class="w-full h-full object-contain"></video>
+          </div>
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <div class="text-xs font-extrabold text-white">${c.title}</div>
+              <div class="text-[11px] text-zinc-400 mt-0.5">${c.duration}s • Score Viral: <span class="text-emerald-400 font-bold">${c.score}/100</span></div>
+            </div>
+          </div>
+          <a
+            href="${c.download_url}"
+            download="${c.filename}"
+            class="w-full py-3 rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg"
+          >
+            <span>⬇ Baixar MP4 HD (Sem Marca d'Água)</span>
+          </a>
+        </div>
+      `).join("");
+    }
+  </script>
+</body>
+</html>

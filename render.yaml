@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: opusclip-studio-ai
+    runtime: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: YOUTUBE_COOKIES
+        sync: false
